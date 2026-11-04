@@ -363,7 +363,11 @@ class _Malha {
     final custo = <int, double>{origem: 0.0};
     final anterior = <int, int>{};
     final fechados = <int>{};
-    final fila = HeapPriorityQueue<(double, int)>((a, b) => a.$1.compareTo(b.$1));
+    // Empate de custo decidido pelo menor nó, como o heapq do servidor
+    final fila = HeapPriorityQueue<(double, int)>((a, b) {
+      final c = a.$1.compareTo(b.$1);
+      return c != 0 ? c : a.$2.compareTo(b.$2);
+    });
     fila.add((0.0, origem));
 
     while (fila.isNotEmpty) {
