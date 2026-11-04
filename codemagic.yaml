@@ -1,0 +1,136 @@
+# Configuração Codemagic para build iOS + Android
+# https://docs.codemagic.io/yaml-basic-configuration/yaml-getting-started/
+
+workflows:
+  # Build iOS e Android
+  rotas-app:
+    name: Rotas App Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    
+    triggering:
+      events:
+        - push
+        - tag
+        - pull_request
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+        - pattern: 'develop'
+          include: true
+    
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          flutter pub get
+      
+      - name: Run tests
+        script: |
+          flutter test
+      
+      - name: Flutter analyze
+        script: |
+          flutter analyze
+        ignore_failure: true
+      
+      - name: Build Android APK
+        script: |
+          flutter build apk --release
+      
+      - name: Build Android App Bundle
+        script: |
+          flutter build appbundle --release
+      
+      - name: Build iOS IPA (sem signing para AltStore)
+        script: |
+          flutter build ipa --release --export-options-plist=/dev/null || true
+          # Se falhar, tentar sem codesign
+          if [ ! -d "build/ios/ipa" ]; then
+            flutter build ios --release --no-codesign
+            mkdir -p build/ios/ipa
+            cd build/ios/iphoneos
+            mkdir -p Payload
+            cp -r Runner.app Payload/
+            zip -r ../ipa/rotas-app.ipa Payload
+            cd ../../..
+          fi
+    
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/bundle/release/*.aab
+      - build/ios/ipa/*.ipa
+    
+    publishing:
+      email:
+        recipients:
+          - seu-email@exemplo.com
+        notify:
+          success: true
+          failure: true
+      
+      # Descomentar para publicar no Google Play
+      # google_play:
+      #   credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+      #   track: internal
+      #   in_app_update_priority: 0
+      
+      # Descomentar para publicar no TestFlight
+      # app_store_connect:
+      #   api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+      #   key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+      #   issuer_id: $APP_STORE_CONNECT_ISSUER_ID
+      #   submit_to_testflight: true
+
+# Workflow somente iOS
+  ios-workflow:
+    name: iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      
+      - name: Pod install
+        script: |
+          cd ios
+          pod install
+      
+      - name: Build iOS
+        script: flutter build ios --release --no-codesign
+    
+    artifacts:
+      - build/ios/iphoneos/*.app
+
+# Workflow somente Android
+  android-workflow:
+    name: Android Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    
+    environment:
+      flutter: stable
+      
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+      
+      - name: Build APK
+        script: flutter build apk --release
+      
+      - name: Build App Bundle
+        script: flutter build appbundle --release
+    
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - build/app/outputs/bundle/release/*.aab

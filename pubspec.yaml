@@ -1,0 +1,56 @@
+name: rotas_app
+description: App de navegação com otimização de rotas para General Salgado/SP
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # Banco de dados SQLite embutido
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  path_provider: ^2.1.1
+  
+  # HTTP e API
+  http: ^1.1.2
+  dio: ^5.4.0
+  
+  # Mapa e localização
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  geolocator: ^10.1.0
+  
+  # Text-to-speech para navegação por voz
+  flutter_tts: ^3.8.5
+  
+  # Gerenciamento de estado
+  provider: ^6.1.1
+  
+  # Utilitários
+  intl: ^0.18.1
+  shared_preferences: ^2.2.2
+  uuid: ^4.2.2
+  collection: ^1.18.0
+  
+  # UI
+  cupertino_icons: ^1.0.6
+  flutter_svg: ^2.0.9
+  
+  # Permissões
+  permission_handler: ^11.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  build_runner: ^2.4.7
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/database/rotas.db
